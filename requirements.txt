@@ -1,0 +1,4 @@
+lightning
+torchvision
+torch
+torchmetrics
