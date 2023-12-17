@@ -144,38 +144,44 @@ class MAEDataset(Dataset):
     and removes ZERO from it for the image reconstruction task
     """
 
-    def __init__(self, data_dir, images_list, base_transform, mae_transform):
+    def __init__(self, root, base_transform=None, mae_transform=None):
         super().__init__()
-        self.data_dir = data_dir
-        self.images_list = images_list
+        self.root = root
         self.mae_transform = mae_transform
+        self.base_transform = base_transform
 
         self._dataset = Caltech101(
-            root=self.data_dir,
-            target_type="category",
-            download=True,
-            transform=base_transform,
+            root=self.root, target_type="category", download=True
         )
 
-        self.to_tensor = T.Compose([T.ToTensor()])  # , T.Normalize(self.mean, self.std)
+        self.to_tensor = T.Compose([T.ToTensor()])
 
     def __len__(self):
         return len(self._dataset)
 
     def __getitem__(self, idx):
         img_orig, _ = self._dataset[idx]
+        img_orig = np.asarray(img_orig)
+
+        if len(img_orig.shape) < 3:
+            img_orig = np.repeat(img_orig[..., np.newaxis], repeats=3, axis=2)
+
+        if self.base_transform:
+            img_orig = self.base_transform(image=img_orig)["image"]
 
         #
         # basic transformations
         #
         mask = ~np.zeros(shape=img_orig.shape, dtype=bool)
 
-        #
-        # masked transformations
-        #
-        mae_img_mask = self.mae_transform(image=img_orig, mask=mask)
-        img_mae = mae_img_mask["image"]
-        mask = ~mae_img_mask["mask"]  # zero out all other pixels but patch
+        img_mae = img_orig
+        if self.mae_transform:
+            #
+            # masked transformations
+            #
+            mae_img_mask = self.mae_transform(image=img_orig, mask=mask)
+            img_mae = mae_img_mask["image"]
+            mask = ~mae_img_mask["mask"]  # zero out all other pixels but patch
 
         img_mae = self.to_tensor(img_mae)
         img_orig = self.to_tensor(img_orig)
@@ -218,19 +224,12 @@ class MAEDataModule(L.LightningDataModule):
         self.patch_type = patch_type
 
     def prepare_data(self) -> None:
-        self.train_dataset = Caltech101(
-            root=self.data_dir, target_type="category", download=True
-        )
+        self.train_dataset = MAEDataset(root=self.data_dir)
         #
         # Get image sizes
         #
-        img, _ = self.train_dataset[0]
-        import pdb
-
-        pdb.set_trace()
-        self.img_h = img.size[0]
-        self.img_w = img.size[1]
-        self.img_c = img.size[0]
+        img, _ = self.train_dataset._dataset[0]
+        print("Example image shape:", np.asarray(img).shape)
 
     def setup(self, stage: str) -> None:
         #
@@ -242,34 +241,31 @@ class MAEDataModule(L.LightningDataModule):
             A.VerticalFlip(),
         ]
 
+        self.mae_transform = None
         if self.patch_type == PatchType.ZERO:
-            self.transform.append(
-                RandomGridDrop(
-                    patch_count=self.patch_count,
-                    patch_dropout=self.patch_dropout,
-                    img_height=self.img_h,
-                    img_width=self.img_w,
-                    img_channels=self.img_c,
-                    fill_value=0,
-                ),
+            self.mae_transform = RandomGridDrop(
+                patch_count=self.patch_count,
+                patch_dropout=self.patch_dropout,
+                img_height=self.img_h,
+                img_width=self.img_w,
+                img_channels=self.img_c,
+                fill_value=0,
             )
+
         elif self.patch_type == PatchType.IMAGE:
-            self.transform.append(
-                CutPaste(
-                    patch_width=self.img_w // self.patches_per_dimension,
-                    patch_height=self.img_h // self.patches_per_dimension,
-                )
+            self.mae_transform = CutPaste(
+                patch_width=self.img_w // self.patches_per_dimension,
+                patch_height=self.img_h // self.patches_per_dimension,
             )
         else:
             raise Exception(f"{self.patch_type} is not handled")
 
         self.transform = A.Compose(self.transform)
 
-        self.train_dataset = Caltech101(
+        self.train_dataset = MAEDataset(
             root=self.data_dir,
-            target_type="category",
-            download=True,
-            transform=self.transform,
+            base_transform=self.transform,
+            mae_transform=self.mae_transform,
         )
 
     def train_dataloader(self):

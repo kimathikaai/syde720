@@ -1,4 +1,10 @@
 lightning
+notebook
+patchify
+opencv-python
+albumentations
 torchvision
 torch
 torchmetrics
+tensorboard
+segmentation_models_pytorch
