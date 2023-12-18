@@ -93,7 +93,7 @@ if __name__ == "__main__":
     if args.pretrain_path:
         pretrained_model = torch.load(args.pretrain_path)
         print("Pretrained_path:", args.pretrain_path, type(pretrained_model))
-        assert isinstance(MAEUNet, type(pretrained_model))
+        assert isinstance(MAEUNet, pretrained_model)
         model.encoder = pretrained_model.encoder
 
     #
