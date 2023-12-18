@@ -22,7 +22,7 @@ class ClassModel(L.LightningModule):
         super().__init__()
 
         self.save_hyperparameters()
-        self.name=''
+        self.name = ""
         self.num_classes = num_classes
         self.learning_rate = learning_rate
         self.weight_decay = weight_decay
@@ -48,15 +48,15 @@ class ClassModel(L.LightningModule):
         # size will then be (imsize/2^5)^2
         #
         s1 = self.encoder.out_channels[-1]
-        imsize = img_h
-        s2 = imsize // (2**5)  # 5 = length of encoder layers
+        h = img_h // (2**5)
+        w = img_w // (2**5)
         #
         # Make an MLP from a list of hidden layer sizes
         #
         layers = []
         for i in range(len(hidd_l) + 1):
             if i == 0:
-                layers.append(nn.Linear(s1 * s2 * s2, hidd_l[i]))
+                layers.append(nn.Linear(s1 * h * w, hidd_l[i]))
                 layers.append(nn.ReLU())
             elif i == len(hidd_l):
                 layers.append(nn.Linear(hidd_l[i - 1], num_classes))
