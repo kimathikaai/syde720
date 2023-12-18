@@ -211,7 +211,6 @@ class MAEDataModule(L.LightningDataModule):
         self.batch_size = batch_size
         self.num_workers = num_workers
 
-        self.num_classes = 20
         self.img_h = img_h
         self.img_w = img_w
         self.img_c = img_c
