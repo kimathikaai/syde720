@@ -48,7 +48,7 @@ class Food103Dataset(Dataset):
         # opencv reads images in BGR format by default. Need to switch for transforms
         #
         img = cv2.cvtColor(cv2.imread(self.imgs[idx]), cv2.COLOR_BGR2RGB)
-        mask = cv2.imread(self.masks[idx])
+        mask = cv2.imread(self.masks[idx], cv2.IMREAD_GRAYSCALE)
 
         # do augmentation here
         if self.transform is not None:
