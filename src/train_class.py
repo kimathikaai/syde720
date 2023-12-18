@@ -17,6 +17,7 @@ def get_args():
     """
     Parse arguments.
     """
+
     # fmt:off
     parser = argparse.ArgumentParser()
 
