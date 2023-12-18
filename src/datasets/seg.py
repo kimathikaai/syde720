@@ -92,7 +92,7 @@ class SegmentationDataModule(L.LightningDataModule):
 
         self.num_classes = None
 
-    def setup(self, stage: str) -> None:
+    def setup(self, stage=None) -> None:
         #
         # Transforms
         #

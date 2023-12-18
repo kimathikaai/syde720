@@ -100,7 +100,7 @@ if __name__ == "__main__":
         img_w=args.img_w,
         img_c=args.img_c,
     )
-    data_module.prepare_data()
+    data_module.setup()
     print("Created data_module")
 
     #
