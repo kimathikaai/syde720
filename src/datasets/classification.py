@@ -8,7 +8,7 @@ from torchvision import transforms as T
 from torchvision.datasets import ImageFolder
 
 
-class ClassificationDataModule(L.LightningDataModule):
+class ClassDataModule(L.LightningDataModule):
     def __init__(
         self,
         data_dir: str,
@@ -55,7 +55,10 @@ class ClassificationDataModule(L.LightningDataModule):
         self.test_dataset = ImageFolder(
             root=os.path.join(self.data_dir, "evaluation"), transform=self.transform
         )
-        print('Created classification datasets')
+        print("Created classification datasets")
+
+        # Update the number of classes
+        self.classes = np.unique(self.train_dataset.targets)
 
     def train_dataloader(self):
         return DataLoader(
