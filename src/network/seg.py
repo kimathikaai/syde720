@@ -63,8 +63,8 @@ class SegmentationModel(L.LightningModule):
         argmax = logits.argmax(dim=1)
 
         self.train_iou.update(argmax, y)
-        self.log("seg/train/loss", loss, on_epoch=True, on_step=True)
-        self.log("seg/train/iou", self.train_iou, on_epoch=True, on_step=True)
+        self.log("seg/train/loss", loss, on_epoch=True, on_step=False)
+        self.log("seg/train/iou", self.train_iou, on_epoch=True, on_step=False)
 
         return loss
 
@@ -75,8 +75,8 @@ class SegmentationModel(L.LightningModule):
         argmax = logits.argmax(dim=1)
 
         self.val_iou.update(argmax, y)
-        self.log("seg/val/loss", loss, on_epoch=True, on_step=True)
-        self.log("seg/val/iou", self.val_iou, on_epoch=True, on_step=True)
+        self.log("seg/val/loss", loss, on_epoch=True, on_step=False)
+        self.log("seg/val/iou", self.val_iou, on_epoch=True, on_step=False)
 
         return loss
 
@@ -87,8 +87,8 @@ class SegmentationModel(L.LightningModule):
         argmax = logits.argmax(dim=1)
 
         self.test_iou.update(argmax, y)
-        self.log("seg/test/loss", loss, on_epoch=True, on_step=True)
-        self.log("seg/test/iou", self.test_iou, on_epoch=True, on_step=True)
+        self.log("seg/test/loss", loss, on_epoch=True, on_step=False)
+        self.log("seg/test/iou", self.test_iou, on_epoch=True, on_step=False)
 
         return loss
 
