@@ -96,7 +96,7 @@ class SegmentationDataModule(L.LightningDataModule):
         #
         # Transforms
         #
-        self.transform_train = T.Compose(
+        self.transform_train = A.Compose(
             [
                 A.Resize(self.img_h, self.img_w, interpolation=cv2.INTER_NEAREST),
                 A.HorizontalFlip(),
@@ -106,7 +106,7 @@ class SegmentationDataModule(L.LightningDataModule):
                 A.GaussNoise(),
             ]
         )
-        self.transform_val = T.Compose(
+        self.transform_val = A.Compose(
             [
                 A.Resize(self.img_h, self.img_w, interpolation=cv2.INTER_NEAREST),
             ]
