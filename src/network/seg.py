@@ -2,12 +2,23 @@ import lightning as L
 import segmentation_models_pytorch as smp
 import torch
 import torch.nn as nn
+import torchmetrics
 
 
 class SegmentationModel(L.LightningModule):
-    def __init__(self, num_classes, learning_rate, weight_decay) -> None:
+    def __init__(
+        self,
+        num_classes,
+        backbone,
+        img_c,
+        learning_rate=1e-4,
+        weight_decay=1e-4,
+        encoder_depth=5,
+        decoder_channels=[256, 128, 64, 32, 16],
+    ) -> None:
         super().__init__()
 
+        self.save_hyperparameters()
         self.num_classes = num_classes
         self.learning_rate = learning_rate
         self.weight_decay = weight_decay
@@ -17,13 +28,26 @@ class SegmentationModel(L.LightningModule):
         # Initialize the model --> updated to softmax activation
         #
         self.model = smp.Unet(
-            encoder_name="resnet50",
+            encoder_name=backbone,
             encoder_weights="imagenet",
-            classes=self.num_classes,
-            in_channels=3,
+            classes=num_classes,
+            in_channels=img_c,
             activation=None,
-            encoder_depth=5,
-            decoder_channels=[256, 128, 64, 32, 16],
+            encoder_depth=encoder_depth,
+            decoder_channels=decoder_channels,
+        )
+
+        #
+        # Torch metrics
+        #
+        self.train_iou = torchmetrics.JaccardIndex(
+            task="multiclass", average="macro", num_classes=self.num_classes
+        )
+        self.val_iou = torchmetrics.JaccardIndex(
+            task="multiclass", average="macro", num_classes=self.num_classes
+        )
+        self.test_iou = torchmetrics.JaccardIndex(
+            task="multiclass", average="macro", num_classes=self.num_classes
         )
 
     def forward(self, x):
@@ -31,36 +55,39 @@ class SegmentationModel(L.LightningModule):
 
         return logits
 
-    def shared_step(self, batch):
-        x, y = batch
-        logits = self.forward(x)
-        softmax = logits.softmax(dim=1)
-
-        loss = self.loss(logits, y)
-
-        return loss, logits, softmax
-
     def training_step(self, batch, batch_idx):
         x, y = batch
         logits = self.forward(x)
-
         loss = self.loss(logits, y)
+        argmax = logits.argmax(dim=1)
+
+        self.train_iou.update(argmax, y)
+        self.log("seg/train/loss", loss, on_epoch=True, on_step=True)
+        self.log("seg/train/iou", self.train_iou, on_epoch=True, on_step=True)
 
         return loss
 
     def validation_step(self, batch, batch_idx):
         x, y = batch
         logits = self.forward(x)
-
         loss = self.loss(logits, y)
+        argmax = logits.argmax(dim=1)
+
+        self.val_iou.update(argmax, y)
+        self.log("seg/val/loss", loss, on_epoch=True, on_step=True)
+        self.log("seg/val/iou", self.val_iou, on_epoch=True, on_step=True)
 
         return loss
 
     def test_step(self, batch, batch_idx):
         x, y = batch
         logits = self.forward(x)
-
         loss = self.loss(logits, y)
+        argmax = logits.argmax(dim=1)
+
+        self.test_iou.update(argmax, y)
+        self.log("seg/test/loss", loss, on_epoch=True, on_step=True)
+        self.log("seg/test/iou", self.test_iou, on_epoch=True, on_step=True)
 
         return loss
 
@@ -76,5 +103,5 @@ class SegmentationModel(L.LightningModule):
         return {
             "optimizer": optimizer,
             "lr_scheduler": scheduler,
-            "monitor": "val_loss",
+            "monitor": "seg/val/iou",
         }
