@@ -19,6 +19,7 @@ class SegmentationModel(L.LightningModule):
         super().__init__()
 
         self.save_hyperparameters()
+        self.name=''
         self.num_classes = num_classes
         self.learning_rate = learning_rate
         self.weight_decay = weight_decay

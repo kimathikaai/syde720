@@ -88,7 +88,7 @@ class ClassDataModule(L.LightningDataModule):
 
 
 if __name__ == "__main__":
-    data_module = ClassificationDataModule(
+    data_module = ClassDataModule(
         data_dir="/Users/kimathikaai/workspace/syde720/tmp/food-11",
         batch_size=8,
         num_workers=0,
