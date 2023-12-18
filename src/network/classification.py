@@ -100,8 +100,8 @@ class ClassModel(L.LightningModule):
         loss, logits, y = self._get_loss(batch)
 
         self.train_acc.update(logits, y)
-        self.log("class/train/loss", loss, on_epoch=True, on_step=True)
-        self.log("class/train/acc", self.train_acc, on_epoch=True, on_step=True)
+        self.log("class/train/loss", loss, on_epoch=True, on_step=False)
+        self.log("class/train/acc", self.train_acc, on_epoch=True, on_step=False)
 
         return loss
 
@@ -109,8 +109,8 @@ class ClassModel(L.LightningModule):
         loss, logits, y = self._get_loss(batch)
 
         self.train_acc.update(logits, y)
-        self.log("class/val/loss", loss, on_epoch=True, on_step=True)
-        self.log("class/val/acc", self.val_acc, on_epoch=True, on_step=True)
+        self.log("class/val/loss", loss, on_epoch=True, on_step=False)
+        self.log("class/val/acc", self.val_acc, on_epoch=True, on_step=False)
 
         return loss
 
@@ -118,8 +118,8 @@ class ClassModel(L.LightningModule):
         loss, logits, y = self._get_loss(batch)
 
         self.train_acc.update(logits, y)
-        self.log("class/test/loss", loss, on_epoch=True, on_step=True)
-        self.log("class/test/acc", self.test_acc, on_epoch=True, on_step=True)
+        self.log("class/test/loss", loss, on_epoch=True, on_step=False)
+        self.log("class/test/acc", self.test_acc, on_epoch=True, on_step=False)
 
         return loss
 
