@@ -48,7 +48,7 @@ class ClassModel(L.LightningModule):
         # size will then be (imsize/2^5)^2
         #
         s1 = self.encoder.out_channels[-1]
-        imsize = img_h * img_w
+        imsize = img_h
         s2 = imsize // (2**5)  # 5 = length of encoder layers
         #
         # Make an MLP from a list of hidden layer sizes
