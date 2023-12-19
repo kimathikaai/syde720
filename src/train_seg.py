@@ -75,6 +75,7 @@ class GenerateCallback(Callback):
             with torch.no_grad():
                 model.eval()
                 pred_masks = model(imgs)
+                pred_masks = pred_masks.argmax(dim=1)
                 model.train()
             # Plot and add to tensorboard
             masks = masks.unsqueeze(1).repeat(1,3,1,1)
