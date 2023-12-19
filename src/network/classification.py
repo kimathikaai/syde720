@@ -108,7 +108,7 @@ class ClassModel(L.LightningModule):
     def validation_step(self, batch, batch_idx):
         loss, logits, y = self._get_loss(batch)
 
-        self.train_acc.update(logits, y)
+        self.val_acc.update(logits, y)
         self.log("class/val/loss", loss, on_epoch=True, on_step=False)
         self.log("class/val/acc", self.val_acc, on_epoch=True, on_step=False)
 
@@ -117,7 +117,7 @@ class ClassModel(L.LightningModule):
     def test_step(self, batch, batch_idx):
         loss, logits, y = self._get_loss(batch)
 
-        self.train_acc.update(logits, y)
+        self.test_acc.update(logits, y)
         self.log("class/test/loss", loss, on_epoch=True, on_step=False)
         self.log("class/test/acc", self.test_acc, on_epoch=True, on_step=False)
 
