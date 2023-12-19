@@ -18,9 +18,31 @@ class CutPaste:
     Implementation of the CutPaste augementation technique
     """
 
-    def __init__(self, patch_width, patch_height):
-        self.patch_width = patch_width
-        self.patch_height = patch_height
+    def __init__(
+        self,
+        patch_count: int,
+        patch_dropout: float,
+        img_height: int,
+        img_width: int,
+        img_channels: int,
+    ):
+        self.patch_count = patch_count
+        self.num_dropped_patches = int(patch_count * patch_dropout)
+        print("[CutPaste] Pasting {}".format(self.num_dropped_patches))
+
+        divisions = int(np.sqrt(patch_count))
+        assert patch_count == divisions**2
+
+        # assert that ZERO can be created
+        assert img_width % divisions == 0, "{} % {}".format(img_width, divisions)
+        assert img_height % divisions == 0, "{} % {}".format(img_height, divisions)
+
+        self.patch_dim = (
+            int(img_height / divisions),
+            int(img_width / divisions),
+            img_channels,
+        )
+        print("[CutPaste] Patch dimensions", self.patch_dim, type(self.patch_dim))
 
     def __call__(self, image: np.ndarray, mask: np.ndarray):
         """
@@ -40,36 +62,34 @@ class CutPaste:
         # )
         img_h, img_w, img_c = image.shape
 
-        # crop = T.RandomCrop((self.patch_width, self.patch_height))
-        # Get random patch
-        x_pos_patch = np.random.randint(0, img_w - self.patch_width)
-        y_pos_patch = np.random.randint(0, img_h - self.patch_height)
-        # print("x_pos_patch", x_pos_patch, "y_pos_patch", y_pos_patch)
-        image_patch = image[
-            y_pos_patch : y_pos_patch + self.patch_height,
-            x_pos_patch : x_pos_patch + self.patch_width,
-            :,
-        ]
-        # image_patch = self.crop(image)
+        # Get ZERO
+        image_patches = patchify(image, patch_size=self.patch_dim, step=self.patch_dim)
+        mask_patches = patchify(mask, patch_size=self.patch_dim, step=self.patch_dim)
 
-        # Get pasting position
-        x_pos = np.random.randint(0, img_w - self.patch_width)
-        y_pos = np.random.randint(0, img_h - self.patch_height)
-        # print("x_pos", x_pos, "y_pos", y_pos)
+        flatten_image_patches = image_patches.reshape(-1, *image_patches.shape[2:])
+        flatten_mask_patches = mask_patches.reshape(-1, *mask_patches.shape[2:])
 
-        # Apply crop to original image
-        patch_image = image.copy()
-        patch_image[
-            y_pos : y_pos + self.patch_height, x_pos : x_pos + self.patch_width, :
-        ] = image_patch
+        # ZERO to drop
+        patch_idx_to_drop = np.random.choice(
+            np.arange(self.patch_count), size=self.num_dropped_patches, replace=False
+        )
 
-        # 1 = location where the patch was pasted
-        # 0.5 = location where the patch was sourced
-        mask[y_pos : y_pos + self.patch_height, x_pos : x_pos + self.patch_width, :] = 0
-        # mask[y_pos_patch : y_pos_patch + self.patch_height, x_pos_patch : x_pos_patch + self.patch_width, :] = 0
-        # mask[:, x_pos_patch:x_pos_patch+self.patch_width, y_pos_patch:y_pos_patch+self.patch_height] = 0.5
+        # select a random patch of the image to be replaced
+        flatten_image_patches[patch_idx_to_drop] = np.random.choice(
+            flatten_image_patches[patch_idx_to_drop]
+        )
+        # signal patch areas on mask
+        flatten_mask_patches[patch_idx_to_drop] = 0
 
-        return {"image": patch_image, "mask": mask}
+        # Reshape to original size
+        image_patches = flatten_image_patches.reshape(*image_patches.shape)
+        mask_patches = flatten_mask_patches.reshape(*mask_patches.shape)
+
+        # Reconstructed dropped ZERO
+        _image = unpatchify(image_patches, image.shape)
+        _mask = unpatchify(mask_patches, mask.shape)
+
+        return {"image": _image, "mask": _mask}
 
 
 class RandomGridDrop:
@@ -253,8 +273,11 @@ class MAEDataModule(L.LightningDataModule):
 
         elif self.patch_type == PatchType.IMAGE:
             self.mae_transform = CutPaste(
-                patch_width=self.img_w // self.patches_per_dimension,
-                patch_height=self.img_h // self.patches_per_dimension,
+                patch_count=self.patch_count,
+                patch_dropout=self.patch_dropout,
+                img_height=self.img_h,
+                img_width=self.img_w,
+                img_channels=self.img_c,
             )
         else:
             raise Exception(f"{self.patch_type} is not handled")
