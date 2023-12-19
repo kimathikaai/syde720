@@ -77,6 +77,8 @@ class GenerateCallback(Callback):
                 pred_masks = model(imgs)
                 model.train()
             # Plot and add to tensorboard
+            masks = masks.unsqueeze(1).repeat(1,3,1,1)
+            pred_masks = pred_masks.unsqueeze(1).repeat(1,3,1,1)
             imgs = torch.stack([imgs, masks, pred_masks], dim=1).flatten(0, 1)
             grid = torchvision.utils.make_grid(imgs, nrow=3, normalize=True)
             trainer.logger.experiment.add_image(
