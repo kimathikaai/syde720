@@ -210,7 +210,7 @@ class MAEDataset(Dataset):
         return img_mae, img_orig, mask
 
 
-PatchType = Enum("PatchType", ["ZERO", "IMAGE"])
+PatchType = Enum("PatchType", ["ZERO", "PATCH"])
 
 
 class MAEDataModule(L.LightningDataModule):
@@ -271,7 +271,7 @@ class MAEDataModule(L.LightningDataModule):
                 fill_value=0,
             )
 
-        elif self.patch_type == PatchType.IMAGE:
+        elif self.patch_type == PatchType.PATCH:
             self.mae_transform = CutPaste(
                 patch_count=self.patch_count,
                 patch_dropout=self.patch_dropout,
