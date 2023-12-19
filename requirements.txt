@@ -3,6 +3,9 @@ notebook
 patchify
 opencv-python
 albumentations
+pandas
+seaborn
+matplotlib
 torchvision
 torch
 torchmetrics
