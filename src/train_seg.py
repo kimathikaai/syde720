@@ -148,7 +148,7 @@ if __name__ == "__main__":
         dirpath=weights_dir,
         save_top_k=1,
         filename="{step}-{loss:.2f}",
-        monitor="seg/val/acc",
+        monitor="seg/val/iou",
         mode="max",
     )
 
