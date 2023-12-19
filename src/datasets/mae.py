@@ -75,9 +75,8 @@ class CutPaste:
         )
 
         # select a random patch of the image to be replaced
-        flatten_image_patches[patch_idx_to_drop] = np.random.choice(
-            flatten_image_patches[patch_idx_to_drop]
-        )
+        patch_to_paste = np.random.choice(patch_idx_to_drop)
+        flatten_image_patches[patch_idx_to_drop] = flatten_image_patches[patch_to_paste]
         # signal patch areas on mask
         flatten_mask_patches[patch_idx_to_drop] = 0
 
