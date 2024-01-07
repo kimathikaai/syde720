@@ -1,6 +1,7 @@
 lightning
 notebook
 patchify
+python-dotenv
 opencv-python
 albumentations
 pandas

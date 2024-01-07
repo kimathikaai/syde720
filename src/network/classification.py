@@ -3,6 +3,7 @@ import segmentation_models_pytorch as smp
 import torch
 import torch.nn as nn
 import torchmetrics
+import wandb
 
 
 class ClassModel(L.LightningModule):
@@ -106,6 +107,8 @@ class ClassModel(L.LightningModule):
         return loss
 
     def validation_step(self, batch, batch_idx):
+        wandb.define_metric('class/val/acc', summary='max')
+        wandb.define_metric('class/val/loss', summary='min')
         loss, logits, y = self._get_loss(batch)
 
         self.val_acc.update(logits, y)

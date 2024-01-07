@@ -95,8 +95,7 @@ class GenerateCallback(Callback):
             )
 
 
-if __name__ == "__main__":
-    args = get_args()
+def pretrain(args) -> L.LightningModule:
     L.seed_everything(args.seed)
 
     #
@@ -181,3 +180,10 @@ if __name__ == "__main__":
     torch.save(
         model, os.path.join(args.log_dir, "syde_logs", "{}.ckpt".format(model.name))
     )
+
+    return model
+
+
+if __name__ == "__main__":
+    args = get_args()
+    pretrain(args)

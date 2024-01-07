@@ -4,8 +4,10 @@ from pathlib import Path
 
 import lightning as L
 import torch
+import wandb
+from dotenv import load_dotenv
 from lightning.pytorch.callbacks import LearningRateMonitor, ModelCheckpoint
-from lightning.pytorch.loggers import TensorBoardLogger
+from lightning.pytorch.loggers import TensorBoardLogger, WandbLogger
 from lightning.pytorch.profilers import SimpleProfiler
 
 from src.datasets.classification import ClassDataModule
@@ -57,6 +59,7 @@ def get_args():
 
 
 if __name__ == "__main__":
+    load_dotenv()
     args = get_args()
     print("Command line:", vars(args))
     L.seed_everything(args.seed)
@@ -104,7 +107,17 @@ if __name__ == "__main__":
 
     # setup tensorboard logging
     logger_dir = os.path.join(args.log_dir, "syde_logs", model.name)
-    tb_logger = TensorBoardLogger(save_dir=logger_dir, log_graph=True)
+    # tb_logger = TensorBoardLogger(save_dir=logger_dir, log_graph=True)
+    wandb_logger = WandbLogger(project="syde720", name=model.name, save_dir=logger_dir)
+    # log additional parameters
+    wandb_logger.experiment.config.update(
+        {
+            "batch_size": args.batch_size,
+            "learning_rate": args.lr,
+            "num_workers": args.num_workers,
+            'pretrain_path': args.pretrain_path
+        }
+    )
 
     weights_dir = os.path.join(args.log_dir, "syde_weights", model.name)
     checkpoint_callback = ModelCheckpoint(
@@ -122,7 +135,7 @@ if __name__ == "__main__":
         accelerator="auto",
         devices=1,
         max_epochs=args.epochs,
-        logger=tb_logger,
+        logger=wandb_logger,
         profiler=SimpleProfiler() if args.use_profiler else None,
         callbacks=[checkpoint_callback, lr_callback],
         fast_dev_run=args.fast_dev_run,
