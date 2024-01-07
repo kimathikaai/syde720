@@ -115,7 +115,12 @@ if __name__ == "__main__":
             "batch_size": args.batch_size,
             "learning_rate": args.lr,
             "num_workers": args.num_workers,
-            'pretrain_path': args.pretrain_path
+            "pretrain_path": args.pretrain_path,
+            "seed": args.seed,
+            "weight_decay": args.weight_decay,
+            'img_h': args.img_h,
+            'img_w': args.img_w,
+            'img_c': args.img_c,
         }
     )
 
